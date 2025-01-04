@@ -335,6 +335,10 @@ class ChatGPTClient extends BaseClient {
     ) {
       baseURL = baseURL.split('v1')[0] + 'v1/chat/completions';
     }
+    // 添加这段处理 Ollama API 的代码
+    if (baseURL.includes('11434')) {
+      baseURL = baseURL.replace('/chat/completions', '/api/chat');
+    }
 
     const BASE_URL = new URL(baseURL);
     if (opts.defaultQuery) {
