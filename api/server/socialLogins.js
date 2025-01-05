@@ -16,7 +16,7 @@ const { logger } = require('~/config');
  *
  * @param {Express.Application} app
  */
-const configureSocialLogins = (app) => {
+const configureSocialLogins = async (app) => {
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     passport.use(googleLogin());
   }
@@ -50,6 +50,8 @@ const configureSocialLogins = (app) => {
       sessionOptions.store = new RedisStore({ client, prefix: 'librechat' });
     }
     app.use(session(sessionOptions));
+    await setupOpenId();
+    pp.use(passport.initialize());
     app.use(passport.session());
     setupOpenId();
   }
