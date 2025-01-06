@@ -105,7 +105,9 @@ function convertToUsername(input, defaultValue = '') {
 }
 
 async function setupOpenId() {
-  try {
+  try { 
+    logger.info('[openidStrategy] Starting setup with manual configuration...');
+
     if (process.env.PROXY) {
       const proxyAgent = new HttpsProxyAgent(process.env.PROXY);
       custom.setHttpOptionsDefaults({
@@ -113,12 +115,21 @@ async function setupOpenId() {
       });
       logger.info(`[openidStrategy] proxy agent added: ${process.env.PROXY}`);
     }
-    const issuer = await Issuer.discover(process.env.OPENID_ISSUER);
+    const issuer = new Issuer({
+      issuer: process.env.OPENID_ISSUER,
+      authorization_endpoint: process.env.OPENID_AUTH_URL,
+      token_endpoint: process.env.OPENID_TOKEN_URL,
+      userinfo_endpoint: process.env.OPENID_USERINFO_URL,
+    });
+    logger.info('[openidStrategy] Manual issuer configuration created');
     const client = new issuer.Client({
       client_id: process.env.OPENID_CLIENT_ID,
       client_secret: process.env.OPENID_CLIENT_SECRET,
       redirect_uris: [process.env.DOMAIN_SERVER + process.env.OPENID_CALLBACK_URL],
+      response_types: ['code'],
+      token_endpoint_auth_method: 'client_secret_post'
     });
+    logger.info('[openidStrategy] Client configured');
     const requiredRole = process.env.OPENID_REQUIRED_ROLE;
     const requiredRoleParameterPath = process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH;
     const requiredRoleTokenKind = process.env.OPENID_REQUIRED_ROLE_TOKEN_KIND;
@@ -253,7 +264,8 @@ async function setupOpenId() {
 
     passport.use('openid', openidLogin);
   } catch (err) {
-    logger.error('[openidStrategy]', err);
+    logger.error('[openidStrategy] Setup error:', err);
+    return;
   }
 }
 
