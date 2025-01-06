@@ -135,12 +135,10 @@ async function setupOpenId() {
           scope: process.env.OPENID_SCOPE,
           response_type: 'code',
           response_mode: 'query',
-          // 添加这些参数来确保获取 ID Token
-          nonce: undefined, // will be set by the library
-          state: undefined, // will be set by the library
         },
-        usePKCE: process.env.OPENID_USE_PKCE !== 'false', // 默认启用 PKCE
+        usePKCE: true,  // 启用 PKCE
         passReqToCallback: true, // 传递请求对象到回调
+        sessionKey: 'openid-connect:d1kt.cn',  // 添加 sessionKey
       },
       async (req, tokenSet, userinfo, done) => {
         try {
@@ -150,7 +148,11 @@ async function setupOpenId() {
             id_token: tokenSet.id_token ? 'present' : 'missing',
             userinfo 
           });
-
+          // 先尝试通过 openidId 查找用户
+          let user = await findUser({ openidId: userinfo.sub });
+          logger.info(
+            `[openidStrategy] user ${user ? 'found' : 'not found'} with openidId: ${userinfo.sub}`,
+          );
           if (!user) {
             user = await findUser({ email: userinfo.email });
             logger.info(
