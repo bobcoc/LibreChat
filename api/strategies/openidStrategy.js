@@ -107,21 +107,15 @@ function convertToUsername(input, defaultValue = '') {
 async function setupOpenId() {
   try { 
     logger.info('[openidStrategy] Starting setup with manual configuration...');
-
-    if (process.env.PROXY) {
-      const proxyAgent = new HttpsProxyAgent(process.env.PROXY);
-      custom.setHttpOptionsDefaults({
-        agent: proxyAgent,
-      });
-      logger.info(`[openidStrategy] proxy agent added: ${process.env.PROXY}`);
-    }
     const issuer = new Issuer({
       issuer: process.env.OPENID_ISSUER,
       authorization_endpoint: process.env.OPENID_AUTH_URL,
       token_endpoint: process.env.OPENID_TOKEN_URL,
       userinfo_endpoint: process.env.OPENID_USERINFO_URL,
     });
+
     logger.info('[openidStrategy] Manual issuer configuration created');
+
     const client = new issuer.Client({
       client_id: process.env.OPENID_CLIENT_ID,
       client_secret: process.env.OPENID_CLIENT_SECRET,
@@ -129,6 +123,7 @@ async function setupOpenId() {
       response_types: ['code'],
       token_endpoint_auth_method: 'client_secret_post'
     });
+
     logger.info('[openidStrategy] Client configured');
     const requiredRole = process.env.OPENID_REQUIRED_ROLE;
     const requiredRoleParameterPath = process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH;
@@ -138,17 +133,23 @@ async function setupOpenId() {
         client,
         params: {
           scope: process.env.OPENID_SCOPE,
+          response_type: 'code',
+          response_mode: 'query',
+          // 添加这些参数来确保获取 ID Token
+          nonce: undefined, // will be set by the library
+          state: undefined, // will be set by the library
         },
+        usePKCE: process.env.OPENID_USE_PKCE !== 'false', // 默认启用 PKCE
+        passReqToCallback: true, // 传递请求对象到回调
       },
-      async (tokenset, userinfo, done) => {
+      async (req, tokenSet, userinfo, done) => {
         try {
           logger.info(`[openidStrategy] verify login openidId: ${userinfo.sub}`);
-          logger.debug('[openidStrategy] very login tokenset and userinfo', { tokenset, userinfo });
-
-          let user = await findUser({ openidId: userinfo.sub });
-          logger.info(
-            `[openidStrategy] user ${user ? 'found' : 'not found'} with openidId: ${userinfo.sub}`,
-          );
+          logger.debug('[openidStrategy] verify login tokenset and userinfo', { 
+            access_token: tokenSet.access_token ? 'present' : 'missing',
+            id_token: tokenSet.id_token ? 'present' : 'missing',
+            userinfo 
+          });
 
           if (!user) {
             user = await findUser({ email: userinfo.email });
@@ -263,6 +264,7 @@ async function setupOpenId() {
     );
 
     passport.use('openid', openidLogin);
+    logger.info('[openidStrategy] Strategy setup complete');
   } catch (err) {
     logger.error('[openidStrategy] Setup error:', err);
     return;
