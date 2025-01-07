@@ -73,19 +73,35 @@ router.get(
 
 router.get(
   '/openid',
+  (req, res, next) => {
+    logger.debug('[oauth] Starting OAuth2 authentication');
+    next();
+  },
   passport.authenticate('openid', {
     session: false,
-  }),
+    scope: process.env.OPENID_SCOPE?.split(' ') || ['profile', 'email']
+  })
 );
 
 router.get(
   '/openid/callback',
+  (req, res, next) => {
+    logger.debug('[oauth] Received callback', { 
+      query: req.query,
+      state: req.query.state
+    });
+    next();
+  },
   passport.authenticate('openid', {
     failureRedirect: `${domains.client}/login`,
     failureMessage: true,
-    session: false,
+    session: false
   }),
-  oauthHandler,
+  (req, res, next) => {
+    logger.debug('[oauth] Authentication successful');
+    next();
+  },
+  oauthHandler
 );
 
 router.get(
