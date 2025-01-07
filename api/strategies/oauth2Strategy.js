@@ -2,7 +2,7 @@ const passport = require('passport');
 const OAuth2Strategy = require('passport-oauth2');
 const { findUser, createUser, updateUser } = require('~/models/userMethods');
 const { logger } = require('~/config');
-
+const Balance = require('../models/Balance');
 async function setupOAuth2() {
   try {
     logger.info('[oauth2Strategy] Starting setup...');
