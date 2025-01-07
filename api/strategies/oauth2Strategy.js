@@ -84,37 +84,35 @@ async function setupOAuth2() {
 
             // 创建初始余额
             try {
-              const balanceDoc = await Balance.create({
-                user: user._id,
-                tokenCredits: initialBalance
-              });
+              // 使用 findOneAndUpdate 来确保操作的原子性
+              const balanceDoc = await Balance.findOneAndUpdate(
+                { user: user._id },
+                { 
+                  $setOnInsert: { 
+                    user: user._id,
+                    tokenCredits: initialBalance 
+                  }
+                },
+                { 
+                  upsert: true, 
+                  new: true,
+                  runValidators: true 
+                }
+              );
 
-              logger.debug('[oauth2Strategy] Balance creation result:', {
+              logger.info('[oauth2Strategy] Initial balance created:', {
                 userId: user._id,
                 balance: balanceDoc.tokenCredits,
                 balanceId: balanceDoc._id
               });
 
-              // 验证余额是否正确创建
-              const checkResult = await Balance.check({
-                user: user._id,
-                model: 'default',
-                endpoint: 'default',
-                valueKey: 'tokens',
-                tokenType: 'token',
-                amount: 1,
-              });
-
-              logger.info('[oauth2Strategy] Initial balance check:', {
-                userId: user._id,
-                balanceCheck: checkResult
-              });
             } catch (balanceErr) {
               logger.error('[oauth2Strategy] Error creating initial balance:', {
                 error: balanceErr.message,
                 stack: balanceErr.stack,
                 userId: user._id,
-                attemptedBalance: initialBalance
+                attemptedBalance: initialBalance,
+                mongooseError: balanceErr.name
               });
             }
 
