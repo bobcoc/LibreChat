@@ -84,7 +84,18 @@ async function setupOAuth2() {
 
             // 创建初始余额
             try {
-              // 使用 findOneAndUpdate 来确保操作的原子性
+              // 先检查 Balance 模型是否存在
+              if (!Balance) {
+                throw new Error('Balance model is not defined');
+              }
+            
+              // 记录创建前的状态
+              logger.debug('[oauth2Strategy] Attemptineeeeg to create balance:', {
+                userId: user._id,
+                initialBalance,
+                balanceModelExists: !!Balance
+              });
+            
               const balanceDoc = await Balance.findOneAndUpdate(
                 { user: user._id },
                 { 
@@ -99,22 +110,30 @@ async function setupOAuth2() {
                   runValidators: true 
                 }
               );
-
+            
               logger.info('[oauth2Strategy] Initial balance created:', {
                 userId: user._id,
                 balance: balanceDoc.tokenCredits,
                 balanceId: balanceDoc._id
               });
-
+            
             } catch (balanceErr) {
+              // 更详细的错误处理
+              console.error('Detailed balance error:', balanceErr); // 直接打印完整错误
+              
               logger.error('[oauth2Strategy] Error creating initial balance:', {
-                error: balanceErr.message,
+                name: balanceErr.name,
+                message: balanceErr.message,
                 stack: balanceErr.stack,
-                userId: user._id,
-                attemptedBalance: initialBalance,
-                mongooseError: balanceErr.name
+                userId: user?._id?.toString(),
+                initialBalance,
+                modelState: {
+                  isBalanceDefined: !!Balance,
+                  modelNames: Object.keys(mongoose.models),
+                  connectionState: mongoose.connection.readyState
+                }
               });
-            }
+            } 
 
           } else {
             // 更新现有用户
