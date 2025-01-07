@@ -79,6 +79,29 @@ async function setupOAuth2() {
 
             user = await createUser(user, true, true);
             logger.info('[oauth2Strategy] New user created:', username);
+
+            const initialBalance = parseInt(process.env.OAUTH_INITIAL_BALANCE) || 0;
+
+            // 创建初始余额
+            try {
+              const balance = new Balance({
+                user: user._id,
+                tokenCredits: initialBalance
+              });
+              await balance.save();
+              
+              logger.info('[oauth2Strategy] Initial balance created:', {
+                userId: user._id,
+                balance: initialBalance
+              });
+            } catch (balanceErr) {
+              logger.error('[oauth2Strategy] Error creating initial balance:', {
+                error: balanceErr,
+                userId: user._id,
+                attemptedBalance: initialBalance
+              });
+            }
+
           } else {
             // 更新现有用户
             user.provider = 'oauth2';
