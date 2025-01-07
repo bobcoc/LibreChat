@@ -24,7 +24,9 @@ function AccountSettings() {
 
   const avatarSrc = useAvatar(user);
   const name = user?.avatar ?? user?.username ?? '';
-
+  console.log('startupConfig:', startupConfig);
+  console.log('balanceQuery:', balanceQuery);
+  console.log('isAuthenticated:', isAuthenticated);
   return (
     <Select.SelectProvider>
       <Select.Select
