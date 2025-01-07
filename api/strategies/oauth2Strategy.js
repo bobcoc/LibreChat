@@ -7,17 +7,28 @@ async function setupOAuth2() {
   try {
     logger.info('[oauth2Strategy] Starting setup...');
 
+    const oauth2Options = {
+      authorizationURL: process.env.OPENID_AUTH_URL,
+      tokenURL: process.env.OPENID_TOKEN_URL,
+      clientID: process.env.OPENID_CLIENT_ID,
+      clientSecret: process.env.OPENID_CLIENT_SECRET,
+      callbackURL: process.env.DOMAIN_SERVER + process.env.OPENID_CALLBACK_URL,
+      scope: process.env.OPENID_SCOPE,
+      state: true,
+      pkce: process.env.OPENID_USE_PKCE === 'true',
+    };
+
+    logger.debug('[oauth2Strategy] Configuration:', {
+      authorizationURL: oauth2Options.authorizationURL,
+      tokenURL: oauth2Options.tokenURL,
+      clientID: oauth2Options.clientID ? '(set)' : '(not set)',
+      callbackURL: oauth2Options.callbackURL,
+      scope: oauth2Options.scope,
+    });
+
     const strategy = new OAuth2Strategy(
-      {
-        authorizationURL: process.env.OPENID_AUTH_URL,
-        tokenURL: process.env.OPENID_TOKEN_URL,
-        clientID: process.env.OPENID_CLIENT_ID,
-        clientSecret: process.env.OPENID_CLIENT_SECRET,
-        callbackURL: process.env.DOMAIN_SERVER + process.env.OPENID_CALLBACK_URL,
-        scope: process.env.OPENID_SCOPE,
-        state: true,
-      },
-      async (accessToken, refreshToken, profile, done) => {
+      oauth2Options,
+      async (accessToken, refreshToken, params, profile, done) => {
         try {
           logger.info('[oauth2Strategy] Token received, fetching user info');
 
@@ -29,7 +40,8 @@ async function setupOAuth2() {
           });
 
           if (!userInfoResponse.ok) {
-            throw new Error(`Failed to fetch user info: ${userInfoResponse.status}`);
+            logger.error('[oauth2Strategy] Failed to fetch user info:', userInfoResponse.status);
+            return done(new Error(`Failed to fetch user info: ${userInfoResponse.status}`));
           }
 
           const userinfo = await userInfoResponse.json();
@@ -77,22 +89,17 @@ async function setupOAuth2() {
             if (process.env.OPENID_NAME_CLAIM) {
               user.name = userinfo[process.env.OPENID_NAME_CLAIM];
             }
-            user = await updateUser(user._id, user);
+            await updateUser(user._id, user);
             logger.info('[oauth2Strategy] Existing user updated:', user.username);
           }
 
-          done(null, user);
+          return done(null, user);
         } catch (err) {
           logger.error('[oauth2Strategy] Authentication error:', err);
-          done(err);
+          return done(err);
         }
       }
     );
-
-    // 添加错误处理
-    strategy.error((err) => {
-      logger.error('[oauth2Strategy] Strategy error:', err);
-    });
 
     passport.use('openid', strategy);
     logger.info('[oauth2Strategy] Setup completed successfully');
