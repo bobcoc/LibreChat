@@ -31,7 +31,7 @@ const AskController = async (req, res, next, initializeClient, addTitle) => {
   const sender = getResponseSender({
     ...endpointOption,
     model: endpointOption.modelOptions.model,
-    modelDisplayLabel,
+    modelDisplayLabel: endpointOption.modelLabels?.[endpointOption.modelOptions.model] || modelDisplayLabel,
   });
   const newConvo = !conversationId;
   const user = req.user.id;
