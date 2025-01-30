@@ -579,6 +579,7 @@ export const alternateName = {
   [EModelEndpoint.bedrock]: 'AWS Bedrock',
   [KnownEndpoints.ollama]: 'Ollama',
   [KnownEndpoints.xai]: 'xAI',
+  'deepseek-reasoner': 'deepseekR1', 
 };
 
 const sharedOpenAIModels = [
