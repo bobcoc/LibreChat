@@ -70,7 +70,10 @@ async function loadConfigModels(req) {
 
     const uniqueKey = `${BASE_URL}__${API_KEY}`;
 
-    modelsConfig[name] = [];
+    modelsConfig[name] = {
+      models: [],
+      specs: models.specs || {}
+    };
 
     if (models.fetch && !isUserProvided(API_KEY) && !isUserProvided(BASE_URL)) {
       fetchPromisesMap[uniqueKey] =
@@ -88,7 +91,7 @@ async function loadConfigModels(req) {
     }
 
     if (Array.isArray(models.default)) {
-      modelsConfig[name] = models.default;
+      modelsConfig[name].models = models.default;
     }
   }
 
@@ -102,7 +105,7 @@ async function loadConfigModels(req) {
 
     for (const name of associatedNames) {
       const endpoint = endpointsMap[name];
-      modelsConfig[name] = !modelData?.length ? endpoint.models.default ?? [] : modelData;
+      modelsConfig[name].models = !modelData?.length ? endpoint.models.default ?? [] : modelData;
     }
   }
 

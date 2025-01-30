@@ -12,7 +12,7 @@ import MenuButton from './MenuButton';
 import ModelSpecs from './ModelSpecs';
 import store from '~/store';
 
-export default function ModelSpecsMenu({ modelSpecs }: { modelSpecs?: TModelSpec[] }) {
+export default function ModelSpecsMenu({ modelSpecs, specs }: { modelSpecs?: TModelSpec[], specs?: string[] }) {
   const { conversation } = useChatContext();
   const { newConversation } = useNewConvo();
 
@@ -122,6 +122,17 @@ export default function ModelSpecsMenu({ modelSpecs }: { modelSpecs?: TModelSpec
     }
   }, []);
 
+  const availableSpecs = useMemo(() => {
+    if (!modelSpecs) {
+      return [];
+    }
+    return modelSpecs.map(spec => ({
+      name: spec.name,
+      label: spec.label || spec.name,
+      description: spec.description || ''
+    }));
+  }, [modelSpecs]);
+
   return (
     <Root>
       <MenuButton
@@ -132,7 +143,7 @@ export default function ModelSpecsMenu({ modelSpecs }: { modelSpecs?: TModelSpec
         endpointsConfig={endpointsConfig}
       />
       <Portal>
-        {modelSpecs && modelSpecs.length && (
+        {availableSpecs && availableSpecs.length && (
           <div
             style={{
               position: 'fixed',
