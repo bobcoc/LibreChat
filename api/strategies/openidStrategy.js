@@ -6,7 +6,6 @@ const { Issuer, Strategy: OpenIDStrategy, custom } = require('openid-client');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { findUser, createUser, updateUser } = require('~/models/userMethods');
 const { hashToken } = require('~/server/utils/crypto');
-const { isEnabled } = require('~/server/utils');
 const { logger } = require('~/config');
 
 let crypto;
@@ -107,106 +106,62 @@ function convertToUsername(input, defaultValue = '') {
 
 async function setupOpenId() {
   try {
-    if (process.env.PROXY) {
-      const proxyAgent = new HttpsProxyAgent(process.env.PROXY);
-      custom.setHttpOptionsDefaults({
-        agent: proxyAgent,
-      });
-      logger.info(`[openidStrategy] proxy agent added: ${process.env.PROXY}`);
-    }
-    const issuer = await Issuer.discover(process.env.OPENID_ISSUER);
-    /* Supported Algorithms, openid-client v5 doesn't set it automatically as discovered from server.
-      - id_token_signed_response_alg      // defaults to 'RS256'
-      - request_object_signing_alg        // defaults to 'RS256'
-      - userinfo_signed_response_alg      // not in v5
-      - introspection_signed_response_alg // not in v5
-      - authorization_signed_response_alg // not in v5
-    */
-    /** @type {import('openid-client').ClientMetadata} */
-    const clientMetadata = {
+    logger.info('[openidStrategy] Starting setup...');
+    
+    const issuer = new Issuer({
+      issuer: process.env.OPENID_ISSUER,
+      authorization_endpoint: process.env.OPENID_AUTH_URL,
+      token_endpoint: process.env.OPENID_TOKEN_URL,
+      userinfo_endpoint: process.env.OPENID_USERINFO_URL,
+    });
+
+    const client = new issuer.Client({
       client_id: process.env.OPENID_CLIENT_ID,
       client_secret: process.env.OPENID_CLIENT_SECRET,
       redirect_uris: [process.env.DOMAIN_SERVER + process.env.OPENID_CALLBACK_URL],
-    };
-    if (isEnabled(process.env.OPENID_SET_FIRST_SUPPORTED_ALGORITHM)) {
-      clientMetadata.id_token_signed_response_alg =
-        issuer.id_token_signing_alg_values_supported?.[0] || 'RS256';
-    }
-    const client = new issuer.Client(clientMetadata);
-    const requiredRole = process.env.OPENID_REQUIRED_ROLE;
-    const requiredRoleParameterPath = process.env.OPENID_REQUIRED_ROLE_PARAMETER_PATH;
-    const requiredRoleTokenKind = process.env.OPENID_REQUIRED_ROLE_TOKEN_KIND;
+      response_types: ['code'],  // 只使用授权码
+      token_endpoint_auth_method: 'client_secret_post'
+    });
+
     const openidLogin = new OpenIDStrategy(
       {
         client,
         params: {
-          scope: process.env.OPENID_SCOPE,
+          scope: process.env.OPENID_SCOPE || 'profile email',
+          response_type: 'code',  // 只使用授权码
         },
+        usePKCE: false,
+        passReqToCallback: true,
       },
-      async (tokenset, userinfo, done) => {
+      async (req, tokenSet, userinfo, done) => {
         try {
-          logger.info(`[openidStrategy] verify login openidId: ${userinfo.sub}`);
-          logger.debug('[openidStrategy] very login tokenset and userinfo', { tokenset, userinfo });
+          logger.debug('[openidStrategy] TokenSet received:', {
+            has_access_token: !!tokenSet.access_token,
+            token_type: tokenSet.token_type,
+            expires_in: tokenSet.expires_in
+          });
 
-          let user = await findUser({ openidId: userinfo.sub });
-          logger.info(
-            `[openidStrategy] user ${user ? 'found' : 'not found'} with openidId: ${userinfo.sub}`,
-          );
-
+          // 先尝试通过 email 查找用户
+          let user = await findUser({ email: userinfo.email });
+          
           if (!user) {
-            user = await findUser({ email: userinfo.email });
-            logger.info(
-              `[openidStrategy] user ${user ? 'found' : 'not found'} with email: ${
-                userinfo.email
-              } for openidId: ${userinfo.sub}`,
-            );
-          }
-
-          const fullName = getFullName(userinfo);
-
-          if (requiredRole) {
-            let decodedToken = '';
-            if (requiredRoleTokenKind === 'access') {
-              decodedToken = jwtDecode(tokenset.access_token);
-            } else if (requiredRoleTokenKind === 'id') {
-              decodedToken = jwtDecode(tokenset.id_token);
-            }
-            const pathParts = requiredRoleParameterPath.split('.');
-            let found = true;
-            let roles = pathParts.reduce((o, key) => {
-              if (o === null || o === undefined || !(key in o)) {
-                found = false;
-                return [];
-              }
-              return o[key];
-            }, decodedToken);
-
-            if (!found) {
-              logger.error(
-                `[openidStrategy] Key '${requiredRoleParameterPath}' not found in ${requiredRoleTokenKind} token!`,
+            // 确定用户名
+            let username = '';
+            if (process.env.OPENID_USERNAME_CLAIM) {
+              username = userinfo[process.env.OPENID_USERNAME_CLAIM];
+            } else {
+              username = convertToUsername(
+                userinfo.username || userinfo.given_name || userinfo.email,
               );
             }
 
-            if (!roles.includes(requiredRole)) {
-              return done(null, false, {
-                message: `You must have the "${requiredRole}" role to log in.`,
-              });
-            }
-          }
+            // 获取用户名字
+            const fullName = getFullName(userinfo);
 
-          let username = '';
-          if (process.env.OPENID_USERNAME_CLAIM) {
-            username = userinfo[process.env.OPENID_USERNAME_CLAIM];
-          } else {
-            username = convertToUsername(
-              userinfo.username || userinfo.given_name || userinfo.email,
-            );
-          }
-
-          if (!user) {
+            // 创建新用户
             user = {
               provider: 'openid',
-              openidId: userinfo.sub,
+              openidId: userinfo.sub || userinfo.id, // OAuth2 可能使用 id 而不是 sub
               username,
               email: userinfo.email || '',
               emailVerified: userinfo.email_verified || false,
@@ -214,60 +169,54 @@ async function setupOpenId() {
             };
             user = await createUser(user, true, true);
           } else {
+            // 更新现有用户
             user.provider = 'openid';
-            user.openidId = userinfo.sub;
-            user.username = username;
-            user.name = fullName;
+            user.openidId = userinfo.sub || userinfo.id;
+            await updateUser(user._id, user);
           }
 
+          // 处理用户头像
           if (userinfo.picture && !user.avatar?.includes('manual=true')) {
-            /** @type {string | undefined} */
-            const imageUrl = userinfo.picture;
+            try {
+              const imageUrl = userinfo.picture;
+              let fileName = userinfo.sub || userinfo.id;
+              fileName = `${fileName}.png`;
 
-            let fileName;
-            if (crypto) {
-              fileName = (await hashToken(userinfo.sub)) + '.png';
-            } else {
-              fileName = userinfo.sub + '.png';
-            }
-
-            const imageBuffer = await downloadImage(imageUrl, tokenset.access_token);
-            if (imageBuffer) {
-              const { saveBuffer } = getStrategyFunctions(process.env.CDN_PROVIDER);
-              const imagePath = await saveBuffer({
-                fileName,
-                userId: user._id.toString(),
-                buffer: imageBuffer,
-              });
-              user.avatar = imagePath ?? '';
+              const imageBuffer = await downloadImage(imageUrl, tokenSet.access_token);
+              if (imageBuffer) {
+                const { saveBuffer } = getStrategyFunctions(process.env.CDN_PROVIDER);
+                const imagePath = await saveBuffer({
+                  fileName,
+                  userId: user._id.toString(),
+                  buffer: imageBuffer,
+                });
+                if (imagePath) {
+                  user.avatar = imagePath;
+                  await updateUser(user._id, { avatar: imagePath });
+                }
+              }
+            } catch (error) {
+              logger.error('[openidStrategy] Error processing user avatar:', error);
             }
           }
-
-          user = await updateUser(user._id, user);
 
           logger.info(
-            `[openidStrategy] login success openidId: ${user.openidId} | email: ${user.email} | username: ${user.username} `,
-            {
-              user: {
-                openidId: user.openidId,
-                username: user.username,
-                email: user.email,
-                name: user.name,
-              },
-            },
+            `[openidStrategy] login success for email: ${user.email} | username: ${user.username}`,
           );
 
           done(null, user);
         } catch (err) {
-          logger.error('[openidStrategy] login failed', err);
+          logger.error('[openidStrategy] Verification error:', err);
           done(err);
         }
-      },
+      }
     );
 
     passport.use('openid', openidLogin);
+    logger.info('[openidStrategy] Setup completed');
   } catch (err) {
-    logger.error('[openidStrategy]', err);
+    logger.error('[openidStrategy] Setup error:', err);
+    throw err;
   }
 }
 
