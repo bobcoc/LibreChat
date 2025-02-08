@@ -5,7 +5,7 @@ import * as RadixToast from '@radix-ui/react-toast';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { QueryClient, QueryClientProvider, QueryCache } from '@tanstack/react-query';
-import { ScreenshotProvider, ThemeProvider, useApiErrorBoundary } from './hooks';
+import { ScreenshotProvider, ThemeProvider, useApiErrorBoundary, useScreenshot } from './hooks';
 import { ToastProvider } from './Providers';
 import Toast from './components/ui/Toast';
 import { LiveAnnouncer } from '~/a11y';
@@ -46,17 +46,24 @@ const App = () => {
   );
 };
 
-export default () => (
-  <ScreenshotProvider>
-    <App />
-    <iframe
-      src="/assets/silence.mp3"
-      allow="autoplay"
-      id="audio"
-      title="audio-silence"
-      style={{
-        display: 'none',
-      }}
-    />
-  </ScreenshotProvider>
-);
+export default () => {
+  const { isScreenshotting } = useScreenshot();
+
+  return (
+    <ScreenshotProvider>
+      <App />
+      {isScreenshotting && (
+        <audio
+          id="audio"
+          preload="auto"
+          playsInline
+          loop
+          muted
+          style={{ display: 'none' }}
+        >
+          <source src="/assets/silence.mp3" type="audio/mpeg" />
+        </audio>
+      )}
+    </ScreenshotProvider>
+  );
+};

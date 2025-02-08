@@ -1,15 +1,18 @@
-import { createContext, useRef, useContext, RefObject } from 'react';
+import { createContext, useRef, useContext, RefObject, useState } from 'react';
 import { toCanvas } from 'html-to-image';
 import { ThemeContext } from '~/hooks/ThemeContext';
 
 type ScreenshotContextType = {
   ref?: RefObject<HTMLDivElement>;
+  isScreenshotting: boolean;
 };
 
-const ScreenshotContext = createContext<ScreenshotContextType>({});
+const ScreenshotContext = createContext<ScreenshotContextType>({
+  isScreenshotting: false
+});
 
 export const useScreenshot = () => {
-  const { ref } = useContext(ScreenshotContext);
+  const { ref, isScreenshotting } = useContext(ScreenshotContext);
   const { theme } = useContext(ThemeContext);
 
   const takeScreenShot = async (node: HTMLElement) => {
@@ -54,11 +57,16 @@ export const useScreenshot = () => {
     throw new Error('Ref is not attached to any element.');
   };
 
-  return { screenshotTargetRef: ref, captureScreenshot };
+  return { screenshotTargetRef: ref, captureScreenshot, isScreenshotting };
 };
 
 export const ScreenshotProvider = ({ children }) => {
   const ref = useRef(null);
+  const [isScreenshotting, setIsScreenshotting] = useState(false);
 
-  return <ScreenshotContext.Provider value={{ ref }}>{children}</ScreenshotContext.Provider>;
+  return (
+    <ScreenshotContext.Provider value={{ ref, isScreenshotting }}>
+      {children}
+    </ScreenshotContext.Provider>
+  );
 };
