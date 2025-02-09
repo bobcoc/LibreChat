@@ -122,15 +122,6 @@ export default function ModelSpecsMenu({ modelSpecs }: { modelSpecs?: TModelSpec
     }
   }, []);
 
-  const filteredSpecs = useMemo(() => {
-    if (!modelSpecs || !conversation?.endpoint) {
-      return [];
-    }
-    return modelSpecs.filter(
-      (spec) => spec?.preset?.endpoint === conversation.endpoint
-    );
-  }, [modelSpecs, conversation?.endpoint]);
-
   return (
     <Root>
       <MenuButton
@@ -141,7 +132,7 @@ export default function ModelSpecsMenu({ modelSpecs }: { modelSpecs?: TModelSpec
         endpointsConfig={endpointsConfig}
       />
       <Portal>
-        {filteredSpecs && filteredSpecs.length > 0 && (
+        {modelSpecs && modelSpecs.length && (
           <div
             style={{
               position: 'fixed',
@@ -163,7 +154,7 @@ export default function ModelSpecsMenu({ modelSpecs }: { modelSpecs?: TModelSpec
               className="models-scrollbar mt-2 max-h-[65vh] min-w-[340px] max-w-xs overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-700 dark:text-white lg:max-h-[75vh]"
             >
               <ModelSpecs
-                specs={filteredSpecs}
+                specs={modelSpecs}
                 selected={selected}
                 setSelected={onSelectSpec}
                 endpointsConfig={endpointsConfig}
