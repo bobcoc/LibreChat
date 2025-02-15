@@ -14,7 +14,6 @@ import ChatForm from './Input/ChatForm';
 import { buildTree } from '~/utils';
 import Landing from './Landing';
 import Header from './Header';
-import Footer from './Footer';
 import store from '~/store';
 
 function ChatView({ index = 0 }: { index?: number }) {
@@ -63,10 +62,27 @@ function ChatView({ index = 0 }: { index?: number }) {
       <ChatContext.Provider value={chatHelpers}>
         <AddedChatContext.Provider value={addedChatHelpers}>
           <Presentation useSidePanel={true}>
+            <div className="absolute top-2 left-[300px] flex gap-4 z-50">
+              <a
+                href="https://d1kt.cn"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+              >
+                第一课堂
+              </a>
+              <a
+                href="https://m.d1kt.cn"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+              >
+                课程中心
+              </a>
+            </div>
             {content}
             <div className="w-full border-t-0 pl-0 pt-2 dark:border-white/20 md:w-[calc(100%-.5rem)] md:border-t-0 md:border-transparent md:pl-0 md:pt-0 md:dark:border-transparent">
               <ChatForm index={index} />
-              <Footer />
             </div>
           </Presentation>
         </AddedChatContext.Provider>
