@@ -67,7 +67,7 @@ function ChatView({ index = 0 }: { index?: number }) {
                 href="https://d1kt.cn"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-800 transition-all duration-200 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:shadow-md dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-500"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-green-800 transition-all duration-200 bg-green-50 border-2 border-green-200 rounded-lg hover:bg-green-100 hover:border-green-300 hover:shadow-md dark:bg-green-900 dark:text-green-100 dark:border-green-700 dark:hover:bg-green-800 dark:hover:border-green-600"
               >
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 4.75L19.25 9L12 13.25L4.75 9L12 4.75Z" className="fill-current"/>
@@ -80,7 +80,7 @@ function ChatView({ index = 0 }: { index?: number }) {
                 href="https://m.d1kt.cn"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-800 transition-all duration-200 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:shadow-md dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-500"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-green-800 transition-all duration-200 bg-green-50 border-2 border-green-200 rounded-lg hover:bg-green-100 hover:border-green-300 hover:shadow-md dark:bg-green-900 dark:text-green-100 dark:border-green-700 dark:hover:bg-green-800 dark:hover:border-green-600"
               >
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" 

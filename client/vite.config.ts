@@ -74,22 +74,22 @@ export default defineConfig({
         theme_color: '#009688',
         icons: [
           {
-            src: '/assets/favicon-32x32.png',
+            src: 'https://c.d1kt.cn/logo.png',
             sizes: '32x32',
             type: 'image/png',
           },
           {
-            src: '/assets/favicon-16x16.png',
+            src: 'https://c.d1kt.cn/logo.png',
             sizes: '16x16',
             type: 'image/png',
           },
           {
-            src: '/assets/apple-touch-icon-180x180.png',
+            src: 'https://c.d1kt.cn/logo.png',
             sizes: '180x180',
             type: 'image/png',
           },
           {
-            src: '/assets/maskable-icon.png',
+            src: 'https://c.d1kt.cn/logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
