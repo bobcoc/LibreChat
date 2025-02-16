@@ -62,7 +62,7 @@ function ChatView({ index = 0 }: { index?: number }) {
       <ChatContext.Provider value={chatHelpers}>
         <AddedChatContext.Provider value={addedChatHelpers}>
           <Presentation useSidePanel={true}>
-            <div className="absolute top-2 left-[300px] flex gap-3 z-50">
+            <div className="absolute top-2 left-[400px] flex gap-3 z-50">
               <a
                 href="https://d1kt.cn"
                 target="_blank"
