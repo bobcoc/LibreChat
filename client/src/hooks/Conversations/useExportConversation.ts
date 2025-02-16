@@ -148,9 +148,13 @@ export default function useExportConversation({
     let data;
     try {
       data = await captureScreenshot();
-    } catch (err) {
-      console.error('Failed to capture screenshot');
-      return console.error(err);
+    } catch (err: unknown) {
+      console.error('Screenshot capture failed:', {
+        error: err,
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined
+      });
+      return;
     }
     download(data, `${filename}.png`, 'image/png');
   };
