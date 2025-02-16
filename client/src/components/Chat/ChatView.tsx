@@ -62,21 +62,30 @@ function ChatView({ index = 0 }: { index?: number }) {
       <ChatContext.Provider value={chatHelpers}>
         <AddedChatContext.Provider value={addedChatHelpers}>
           <Presentation useSidePanel={true}>
-            <div className="absolute top-2 left-[300px] flex gap-4 z-50">
+            <div className="absolute top-2 left-[300px] flex gap-3 z-50">
               <a
                 href="https://d1kt.cn"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-800 transition-all duration-200 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:shadow-md dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-500"
               >
+                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 4.75L19.25 9L12 13.25L4.75 9L12 4.75Z" className="fill-current"/>
+                  <path d="M12 13.25L19.25 9L12 13.25L4.75 9L12 13.25Z" className="fill-current opacity-50"/>
+                  <path d="M12 19.25L19.25 15L12 19.25L4.75 15L12 19.25Z" className="fill-current opacity-25"/>
+                </svg>
                 第一课堂
               </a>
               <a
                 href="https://m.d1kt.cn"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-800 transition-all duration-200 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:shadow-md dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-500"
               >
+                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" 
+                    className="stroke-current" strokeWidth="2"/>
+                </svg>
                 课程中心
               </a>
             </div>
