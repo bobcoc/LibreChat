@@ -363,15 +363,19 @@ const setAuthTokens = async (userId, res, sessionId = null) => {
     if (sessionId) {
       // If we have a sessionId, we're refreshing an existing session
       session = await findSession({ sessionId: sessionId }, { lean: false });
+      if (!session) {
+        throw new Error('Session not found');
+      }
       refreshTokenExpires = session.expiration.getTime();
       refreshToken = await generateRefreshToken(session);
     } else {
-      // For new login, delete all existing sessions first
+      // For new login, delete ALL existing sessions first
       try {
-        await deleteSession({ userId, sessionId: { $ne: sessionId } });
+        await deleteSession({ userId }); // Delete all sessions for this user
+        logger.info(`[setAuthTokens] Deleted all existing sessions for user ${userId}`);
       } catch (deleteErr) {
-        logger.warn('[setAuthTokens] Error deleting old sessions:', deleteErr);
-        // Continue with new session creation even if deletion fails
+        logger.error('[setAuthTokens] Error deleting old sessions:', deleteErr);
+        throw deleteErr; // We should ensure old sessions are deleted
       }
 
       // Create new session
@@ -379,6 +383,7 @@ const setAuthTokens = async (userId, res, sessionId = null) => {
       session = result.session;
       refreshToken = result.refreshToken;
       refreshTokenExpires = session.expiration.getTime();
+      logger.info(`[setAuthTokens] Created new session for user ${userId}`);
     }
 
     res.cookie('refreshToken', refreshToken, {

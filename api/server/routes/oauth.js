@@ -21,10 +21,17 @@ const oauthHandler = async (req, res) => {
     if (req.banned) {
       return;
     }
-    await setAuthTokens(req.user._id, res);
+
+    // Ensure we're creating a new session (not refreshing an existing one)
+    await setAuthTokens(req.user._id, res, null);
+    
+    // Add a small delay to ensure the old sessions are properly cleaned up
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     res.redirect(domains.client);
   } catch (err) {
     logger.error('Error in setting authentication tokens:', err);
+    res.redirect(`${domains.client}/login?error=auth_error`);
   }
 };
 
