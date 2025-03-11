@@ -360,30 +360,41 @@ const setAuthTokens = async (userId, res, sessionId = null) => {
     let refreshToken;
     let refreshTokenExpires;
 
+    // Create or get the session first
     if (sessionId) {
       // If we have a sessionId, we're refreshing an existing session
       session = await findSession({ sessionId: sessionId }, { lean: false });
       if (!session) {
-        throw new Error('Session not found');
+        logger.warn(`[setAuthTokens] Session not found for sessionId: ${sessionId}`);
+        // Fall back to creating a new session
+        const result = await createSession(userId);
+        session = result.session;
+        refreshToken = result.refreshToken;
+      } else {
+        refreshToken = await generateRefreshToken(session);
       }
-      refreshTokenExpires = session.expiration.getTime();
-      refreshToken = await generateRefreshToken(session);
     } else {
-      // For new login, delete ALL existing sessions first
-      try {
-        await deleteSession({ userId }); // Delete all sessions for this user
-        logger.info(`[setAuthTokens] Deleted all existing sessions for user ${userId}`);
-      } catch (deleteErr) {
-        logger.error('[setAuthTokens] Error deleting old sessions:', deleteErr);
-        throw deleteErr; // We should ensure old sessions are deleted
-      }
-
       // Create new session
       const result = await createSession(userId);
       session = result.session;
       refreshToken = result.refreshToken;
-      refreshTokenExpires = session.expiration.getTime();
-      logger.info(`[setAuthTokens] Created new session for user ${userId}`);
+    }
+
+    refreshTokenExpires = session.expiration.getTime();
+
+    // Now that we have a valid session, delete all OTHER sessions
+    try {
+      // Only delete sessions that are not the current one
+      if (session && session._id) {
+        await deleteSession({ 
+          userId, 
+          _id: { $ne: session._id } 
+        });
+        logger.info(`[setAuthTokens] Deleted other sessions for user ${userId}, keeping session ${session._id}`);
+      }
+    } catch (deleteErr) {
+      // Just log the error but don't fail the login process
+      logger.warn('[setAuthTokens] Error deleting old sessions:', deleteErr);
     }
 
     res.cookie('refreshToken', refreshToken, {
