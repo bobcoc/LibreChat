@@ -360,6 +360,11 @@ const setAuthTokens = async (userId, res, sessionId = null) => {
     let refreshToken;
     let refreshTokenExpires;
 
+    // Delete all existing sessions for this user before creating a new one
+    if (!sessionId) {
+      await deleteSession({ userId });
+    }
+
     if (sessionId) {
       session = await findSession({ sessionId: sessionId }, { lean: false });
       refreshTokenExpires = session.expiration.getTime();
