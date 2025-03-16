@@ -123,6 +123,17 @@ async function setupOpenId() {
       token_endpoint_auth_method: 'client_secret_post'
     });
 
+    // 添加详细的调试日志
+    console.log('OAuth2 配置信息:', {
+      clientID: process.env.OPENID_CLIENT_ID,
+      clientSecret: '***', // 不输出实际密钥
+      callbackURL: process.env.DOMAIN_SERVER + process.env.OPENID_CALLBACK_URL,
+      issuer: process.env.OPENID_ISSUER,
+      authorizationURL: process.env.OPENID_AUTH_URL,
+      tokenURL: process.env.OPENID_TOKEN_URL,
+      userInfoURL: process.env.OPENID_USERINFO_URL,
+    });
+
     const openidLogin = new OpenIDStrategy(
       {
         client,
@@ -134,6 +145,10 @@ async function setupOpenId() {
         passReqToCallback: true,
       },
       async (req, tokenSet, userinfo, done) => {
+        // 添加调试日志
+        console.log('OpenID 验证被调用', { issuer: process.env.OPENID_ISSUER });
+        console.log('收到的 profile 信息:', JSON.stringify(userinfo, null, 2));
+        
         try {
           logger.debug('[openidStrategy] TokenSet received:', {
             has_access_token: !!tokenSet.access_token,
@@ -206,11 +221,18 @@ async function setupOpenId() {
 
           done(null, user);
         } catch (err) {
+          console.error('OpenID 验证过程中出错:', err);
           logger.error('[openidStrategy] Verification error:', err);
           done(err);
         }
       }
     );
+
+    // 添加错误事件监听
+    openidLogin.error = function(err) {
+      console.error('OpenID 策略错误:', err);
+      // 原始错误处理逻辑
+    };
 
     passport.use('openid', openidLogin);
     logger.info('[openidStrategy] Setup completed');
