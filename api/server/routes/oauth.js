@@ -21,15 +21,10 @@ const oauthHandler = async (req, res) => {
     if (req.banned) {
       return;
     }
-
-    // Set auth tokens without specifying a sessionId to create a new session
     await setAuthTokens(req.user._id, res);
-    
     res.redirect(domains.client);
   } catch (err) {
     logger.error('Error in setting authentication tokens:', err);
-    // Redirect to login page with error
-    res.redirect(`${domains.client}/login?error=auth_error`);
   }
 };
 

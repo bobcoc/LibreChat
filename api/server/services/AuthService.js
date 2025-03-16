@@ -360,41 +360,15 @@ const setAuthTokens = async (userId, res, sessionId = null) => {
     let refreshToken;
     let refreshTokenExpires;
 
-    // Create or get the session first
     if (sessionId) {
-      // If we have a sessionId, we're refreshing an existing session
       session = await findSession({ sessionId: sessionId }, { lean: false });
-      if (!session) {
-        logger.warn(`[setAuthTokens] Session not found for sessionId: ${sessionId}`);
-        // Fall back to creating a new session
-        const result = await createSession(userId);
-        session = result.session;
-        refreshToken = result.refreshToken;
-      } else {
-        refreshToken = await generateRefreshToken(session);
-      }
+      refreshTokenExpires = session.expiration.getTime();
+      refreshToken = await generateRefreshToken(session);
     } else {
-      // Create new session
       const result = await createSession(userId);
       session = result.session;
       refreshToken = result.refreshToken;
-    }
-
-    refreshTokenExpires = session.expiration.getTime();
-
-    // Now that we have a valid session, delete all OTHER sessions
-    try {
-      // Only delete sessions that are not the current one
-      if (session && session._id) {
-        await deleteSession({ 
-          userId, 
-          _id: { $ne: session._id } 
-        });
-        logger.info(`[setAuthTokens] Deleted other sessions for user ${userId}, keeping session ${session._id}`);
-      }
-    } catch (deleteErr) {
-      // Just log the error but don't fail the login process
-      logger.warn('[setAuthTokens] Error deleting old sessions:', deleteErr);
+      refreshTokenExpires = session.expiration.getTime();
     }
 
     res.cookie('refreshToken', refreshToken, {
