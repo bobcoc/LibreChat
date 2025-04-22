@@ -157,6 +157,20 @@ async function setupOAuth2() {
       }
     );
 
+    // 打印 token 请求的所有参数和响应
+    const originalGetOAuthAccessToken = strategy._oauth2.getOAuthAccessToken;
+    strategy._oauth2.getOAuthAccessToken = function(code, params, callback) {
+      console.log('[DEBUG] getOAuthAccessToken called with:', { code, params });
+      return originalGetOAuthAccessToken.call(this, code, params, function(err, accessToken, refreshToken, results) {
+        if (err) {
+          console.error('[DEBUG] getOAuthAccessToken error:', err, results);
+        } else {
+          console.log('[DEBUG] getOAuthAccessToken success:', { accessToken, refreshToken, results });
+        }
+        callback(err, accessToken, refreshToken, results);
+      });
+    };
+
     passport.use('openid', strategy);
     logger.info('[oauth2Strategy] Setup completed successfully');
   } catch (err) {

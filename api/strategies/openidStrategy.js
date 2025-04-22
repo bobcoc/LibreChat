@@ -123,6 +123,11 @@ async function setupOpenId() {
       token_endpoint_auth_method: 'client_secret_post'
     });
 
+    client[custom.http_options] = (options) => {
+      console.log('[DEBUG] openid-client http_options:', options);
+      return options;
+    };
+
     // 添加详细的调试日志
     console.log('OAuth2 配置信息:', {
       clientID: process.env.OPENID_CLIENT_ID,
