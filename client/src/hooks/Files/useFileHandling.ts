@@ -96,7 +96,6 @@ const useFileHandling = (params?: UseFileHandling) => {
     {
       onSuccess: (data) => {
         clearUploadTimer(data.temp_file_id);
-        console.log('upload success', data);
         if (agent_id) {
           queryClient.refetchQueries([QueryKeys.agent, agent_id]);
           return;
@@ -106,10 +105,15 @@ const useFileHandling = (params?: UseFileHandling) => {
           {
             progress: 0.9,
             filepath: data.filepath,
+            type: data.type,
+            height: data.height,
+            width: data.width,
+            filename: data.filename,
+            source: data.source,
+            embedded: data.embedded,
           },
           assistant_id ? true : false,
         );
-
         setTimeout(() => {
           updateFileById(
             data.temp_file_id,

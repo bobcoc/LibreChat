@@ -91,6 +91,14 @@ const ImagePreview = ({
 
   const imageUrl = imageBase64 ?? url ?? '';
 
+  useEffect(() => {
+    return () => {
+      if (url && url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [url]);
+
   const style: styleProps = imageUrl
     ? {
         ...baseStyle,
