@@ -106,6 +106,7 @@ router.get('/', async function (req, res) {
       sharePointPickerGraphScope: process.env.SHAREPOINT_PICKER_GRAPH_SCOPE,
       sharePointPickerSharePointScope: process.env.SHAREPOINT_PICKER_SHAREPOINT_SCOPE,
       openidReuseTokens,
+      hideToolsDropdown: isEnabled(process.env.HIDE_TOOLS_DROPDOWN),
     };
 
     payload.mcpServers = {};

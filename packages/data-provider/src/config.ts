@@ -639,6 +639,7 @@ export type TStartupConfig = {
   sharePointPickerGraphScope?: string;
   sharePointPickerSharePointScope?: string;
   openidReuseTokens?: boolean;
+  hideToolsDropdown?: boolean;
   webSearch?: {
     searchProvider?: SearchProviders;
     scraperType?: ScraperTypes;

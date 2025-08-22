@@ -37,6 +37,11 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
   const mcpSelect = useMCPSelect();
   const { data: startupConfig } = useGetStartupConfig();
 
+  // Hide the dropdown if configured to do so
+  if (startupConfig?.hideToolsDropdown) {
+    return null;
+  }
+
   const { codeEnabled, webSearchEnabled, artifactsEnabled, fileSearchEnabled } =
     useAgentCapabilities(agentsConfig?.capabilities ?? defaultAgentCapabilities);
 
