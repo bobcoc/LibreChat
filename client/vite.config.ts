@@ -46,9 +46,11 @@ export default defineConfig(({ command }) => ({
           'assets/maskable-icon.png',
           'manifest.webmanifest',
         ],
-        globIgnores: ['images/**/*', '**/*.map', 'index.html'],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        globIgnores: ['images/**/*', '**/*.map'],
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/oauth/, /^\/api/],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        skipWaiting: false,
       },
       includeAssets: [],
       manifest: {
