@@ -4,8 +4,9 @@ const MHCHEM_PU_REGEX = /\$\\pu\{/g;
 const MHCHEM_CE_ESCAPED_REGEX = /\$\\\\ce\{[^}]*\}\$/g;
 const MHCHEM_PU_ESCAPED_REGEX = /\$\\\\pu\{[^}]*\}\$/g;
 const CURRENCY_REGEX =
-  /(?<![\\$])\$(?!\$)(?=\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?(?:\s|$|[^a-zA-Z\d]))/g;
-const SINGLE_DOLLAR_REGEX = /(?<!\\)\$(?!\$)((?:[^$\n]|\\[$])+?)(?<!\\)\$(?!\$)/g;
+  /\$(?!\$)(?=\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?(?:\s|$|[^a-zA-Z\d]))/g;
+// 改进的单美元正则表达式：需要匹配非数字开头的LaTeX表达式，避免货币误匹配
+const SINGLE_DOLLAR_REGEX = /\$(?!\$)(?![\d,]*\.?\d*(?:\s|$|[^a-zA-Z\d]))((?:[^$\n]|\\\$)+?)\$(?!\$)/g;
 
 /**
  * Escapes mhchem package notation in LaTeX by converting single dollar delimiters to double dollars
