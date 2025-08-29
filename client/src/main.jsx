@@ -1,3 +1,10 @@
+// Polyfill for Object.hasOwn (Node.js < 16.9.0 compatibility)
+if (!Object.hasOwn) {
+  Object.hasOwn = function (obj, prop) {
+    return Object.prototype.hasOwnProperty.call(obj, prop);
+  };
+}
+
 import 'regenerator-runtime/runtime';
 import { createRoot } from 'react-dom/client';
 import './locales/i18n';

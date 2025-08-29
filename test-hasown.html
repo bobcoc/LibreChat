@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object.hasOwn Compatibility Test</title>
+</head>
+<body>
+    <h1>Object.hasOwn Compatibility Test</h1>
+    <div id="test-results"></div>
+
+    <script>
+        console.log('Testing Object.hasOwn compatibility...');
+        
+        // Test the original Object.hasOwn (if available)
+        const obj = { a: 1, b: 2 };
+        let results = [];
+        
+        try {
+            if (typeof Object.hasOwn === 'function') {
+                const result = Object.hasOwn(obj, 'a');
+                results.push(`✅ Object.hasOwn exists and works: ${result}`);
+            } else {
+                results.push('❌ Object.hasOwn is not available in this browser');
+            }
+        } catch (e) {
+            results.push(`❌ Object.hasOwn error: ${e.message}`);
+        }
+        
+        // Test the polyfill version
+        try {
+            const polyfillResult = (Object.hasOwn || function(obj, prop) { 
+                return Object.prototype.hasOwnProperty.call(obj, prop); 
+            })(obj, 'a');
+            results.push(`✅ Polyfill version works: ${polyfillResult}`);
+        } catch (e) {
+            results.push(`❌ Polyfill error: ${e.message}`);
+        }
+        
+        // Test edge cases
+        try {
+            const polyfill = Object.hasOwn || function(obj, prop) { 
+                return Object.prototype.hasOwnProperty.call(obj, prop); 
+            };
+            
+            results.push(`✅ Test property 'a' exists: ${polyfill(obj, 'a')}`);
+            results.push(`✅ Test property 'c' exists: ${polyfill(obj, 'c')}`);
+            results.push(`✅ Test inherited property 'toString': ${polyfill(obj, 'toString')}`);
+        } catch (e) {
+            results.push(`❌ Edge case error: ${e.message}`);
+        }
+        
+        // Display results
+        document.getElementById('test-results').innerHTML = results.map(r => `<p>${r}</p>`).join('');
+        console.log('Test results:', results);
+    </script>
+</body>
+</html>

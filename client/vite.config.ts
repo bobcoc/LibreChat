@@ -27,6 +27,21 @@ export default defineConfig(({ command }) => ({
   envDir: '../',
   envPrefix: ['VITE_', 'SCRIPT_', 'DOMAIN_', 'ALLOW_'],
   plugins: [
+    // Object.hasOwn polyfill plugin
+    {
+      name: 'object-hasown-polyfill',
+      transform(code, id) {
+        if (code.includes('Object.hasOwn')) {
+          return {
+            code: code.replace(
+              /Object\.hasOwn\s*\(/g,
+              '(Object.hasOwn || function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }).call(null,'
+            ),
+            map: null
+          };
+        }
+      }
+    },
     react(),
     nodePolyfills(),
     VitePWA({
@@ -97,6 +112,7 @@ export default defineConfig(({ command }) => ({
   ],
   publicDir: command === 'serve' ? './public' : false,
   build: {
+    target: ['es2022', 'chrome91', 'firefox90', 'safari15'],
     sourcemap: process.env.NODE_ENV === 'development',
     outDir: './dist',
     minify: 'terser',
